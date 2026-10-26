@@ -1,0 +1,17 @@
+{
+  "projectId": "72381941",
+  "functions": {
+    "analyze-garment": {
+      "hasChanged": false,
+      "hash": "8514e978a90b919f70202353f3febbb53de89d39997eb3cbb1b1c710a63bd099509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+    },
+    "generate-outfit": {
+      "hasChanged": false,
+      "hash": "cfeeabd0bb1d35d84cfbcc6366af9c016dadeaa077366921c48ea12c4d4b82d8509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+    },
+    "generate-avatar": {
+      "hasChanged": false,
+      "hash": "32439f0f048cb9c7092f1f64c615e6873859ae5cd0fa36d110bcf836d2c25816509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+    }
+  }
+}

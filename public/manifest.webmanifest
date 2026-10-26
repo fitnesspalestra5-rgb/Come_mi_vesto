@@ -1,0 +1,19 @@
+{
+  "name": "Come mi vesto?",
+  "short_name": "Come mi vesto",
+  "description": "Il tuo stylist personale: fotografa i capi, scopri abbinamenti e crea outfit per ogni occasione.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#b25139",
+  "orientation": "portrait-primary",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

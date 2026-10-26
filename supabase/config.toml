@@ -1,0 +1,8 @@
+[functions.analyze-garment]
+verify_jwt = true
+
+[functions.generate-outfit]
+verify_jwt = true
+
+[functions.generate-avatar]
+verify_jwt = true
