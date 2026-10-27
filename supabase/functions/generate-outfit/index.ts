@@ -26,11 +26,11 @@ Deno.serve(async (req: Request) => {
     }
 
     const garmentsText = garments
-      .map((g: { id: string; name: string; category: string; color: string }) => `- id:${g.id} | ${g.name} (${g.category}, ${g.color})`)
+      .map((g: { id: string; name: string; category: string; color: string; avatar_section?: string | null }) => `- id:${g.id} | ${g.name} (${g.category}, ${g.color}, sezione: ${g.avatar_section ?? 'busto'})`)
       .join("\n");
 
     const prompt =
-      "Sei uno stylist personale. Componi un outfit usando SOLO i capi elencati, preferendo le combinazioni reali disponibili. " +
+      "Sei uno stylist personale. Componi un outfit usando SOLO i capi elencati, preferendo le combinazioni reali disponibili. Se manca un pantalone o un jeans, suggerisci il colore coordinato migliore per il capo superiore usando un contrasto bilanciato. " +
       "Occasione: " + (occasion || "tempo libero") + ". Contesto meteo: " + (weather || "non specificato") + ".\n\n" +
       "Capi disponibili:\n" + garmentsText + "\n\n" +
       "Restituisci SOLO un oggetto JSON: " +

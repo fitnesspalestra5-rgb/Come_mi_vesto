@@ -3,15 +3,15 @@
   "functions": {
     "analyze-garment": {
       "hasChanged": false,
-      "hash": "8514e978a90b919f70202353f3febbb53de89d39997eb3cbb1b1c710a63bd099509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
-    },
-    "generate-outfit": {
-      "hasChanged": false,
-      "hash": "cfeeabd0bb1d35d84cfbcc6366af9c016dadeaa077366921c48ea12c4d4b82d8509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+      "hash": "d2852dc562ef17034ffaa386c8349e27f69f272da0e8bd2b6e083f46fb55bff3509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
     },
     "generate-avatar": {
       "hasChanged": false,
-      "hash": "32439f0f048cb9c7092f1f64c615e6873859ae5cd0fa36d110bcf836d2c25816509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+      "hash": "bda7dabe5f90ebec00317aaef6123870428944b347a13ae1875537bfc7aa5621509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
+    },
+    "generate-outfit": {
+      "hasChanged": false,
+      "hash": "f2e64eeb1446f67c376df8239276678373b43f6ea66fb85830e9d86164b98fc7509a26fd64a26570cd16a1b3e8f504338b6b910f9e1ccb3480af9325d19fdeeb"
     }
   }
 }

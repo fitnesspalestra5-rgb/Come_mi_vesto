@@ -26,9 +26,14 @@ Deno.serve(async (req: Request) => {
     }
 
     const prompt =
-      "Sei un assistente di moda. Analizza la foto di un capo di abbigliamento e restituisci SOLO un oggetto JSON con questi campi: " +
-      '{"name": breve nome del capo in italiano, "category": una tra ["maglia","maglione","camicia","felpa","giacca","cappotto","pantalone","jeans","gonna","vestito","scarpe","accessorio"], ' +
-      '"colors": array di 1-3 nomi di colore in italiano, "color_hex": esadecimale del colore dominante, "notes": breve nota stylist in italiano}.';
+      "Sei un assistente di moda. Analizza la foto del capo. Se nell'immagine è visibile una didascalia, un titolo o testo descrittivo sotto la foto, usalo come riferimento principale per nome e categoria invece di fare inferenze non necessarie. " +
+      "Restituisci esclusivamente JSON valido con esattamente questi campi e nessun altro: " +
+      '{"nome":"nome del capo ricavato prima dalla didascalia visibile e poi dall\'immagine",' +
+      '"categoria":"una tra Maglia / T-shirt, Camicia, Giacca / Blazer, Felpa / Maglione, Pantalone, Jeans, Shorts, Scarpe / Sneakers, Accessorio",' +
+      '"colore":"colore primario in italiano",' +
+      '"stagione":"una tra Primavera/Estate, Autunno/Inverno, Quattro stagioni",' +
+      '"materiale":"uno tra Cotone, Lino, Denim, Lana, Poliestere, Misto, Pelle / Camoscio",' +
+      '"sezione_avatar":"busto", "gambe" oppure "scarpe"}.';
 
     const result = await geminiVisionJson(cfg.apiKey!, GEMINI_VISION_MODEL, prompt, imageBase64, "image/jpeg", 400);
     if (!result.ok) {

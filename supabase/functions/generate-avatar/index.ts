@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const garmentsDesc = garments
-      .map((g: { name: string; category: string; color: string }) => `${g.color} ${g.name} (${g.category})`)
+      .map((g: { name: string; category: string; color: string; avatar_section?: string | null }) => `${g.color} ${g.name} (${g.category}, sezione ${g.avatar_section ?? 'busto'})`)
       .join(", ");
 
     const prompt =
@@ -37,8 +37,8 @@ Deno.serve(async (req: Request) => {
       garmentsDesc +
       ". Occasione: " + (occasion || "tempo libero") + ". " +
       (styleNote ? "Nota di stile: " + styleNote + ". " : "") +
-      "La persona deve indossare esattamente i capi descritti, con colori fedeli. " +
-      "Stile: foto di moda a figura intera, sfondo neutro, illuminazione naturale.";
+      "La persona deve indossare esattamente i capi descritti, con colori fedeli. Inquadra solo dal collo alla vita per i capi del busto e mostra fianchi e gambe per pantaloni e jeans; non mostrare mai il viso. " +
+      "Stile: foto di moda su sfondo neutro, illuminazione naturale.";
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${cfg.apiKey}`;
 

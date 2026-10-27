@@ -12,6 +12,10 @@ export type Category =
   | 'scarpe'
   | 'accessorio';
 
+export type GarmentSeason = 'Primavera/Estate' | 'Autunno/Inverno' | 'Quattro stagioni';
+export type GarmentMaterial = 'Cotone' | 'Lino' | 'Denim' | 'Lana' | 'Poliestere' | 'Misto' | 'Pelle / Camoscio';
+export type AvatarSection = 'busto' | 'gambe' | 'scarpe';
+
 export type Occasion =
   | 'lavoro'
   | 'tempo_libero'
@@ -31,6 +35,9 @@ export interface Garment {
   color_hex: string;
   image_path: string | null;
   notes: string | null;
+  season: GarmentSeason | null;
+  material: GarmentMaterial | null;
+  avatar_section: AvatarSection | null;
   favorite: boolean;
   created_at: string;
 }

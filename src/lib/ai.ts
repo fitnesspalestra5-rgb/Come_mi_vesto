@@ -5,9 +5,10 @@ import type { Garment, Occasion } from '@/lib/types';
 export interface GarmentAnalysis {
   name: string;
   category: string;
-  colors: string[];
-  color_hex: string;
-  notes: string;
+  color: string;
+  season: string;
+  material: string;
+  avatar_section: string;
 }
 
 export async function analyzeGarment(file: File | Blob): Promise<{ configured: boolean; result?: GarmentAnalysis; error?: string }> {
@@ -19,14 +20,26 @@ export async function analyzeGarment(file: File | Blob): Promise<{ configured: b
   if (data.configured === false) return { configured: false, error: data.error };
   if (data.error) return { configured: true, error: data.error };
   const r = data.result as Record<string, unknown>;
+  const categoryMap: Record<string, string> = {
+    'Maglia / T-shirt': 'maglia',
+    'Camicia': 'camicia',
+    'Giacca / Blazer': 'giacca',
+    'Felpa / Maglione': 'felpa',
+    'Pantalone': 'pantalone',
+    'Jeans': 'jeans',
+    'Shorts': 'pantalone',
+    'Scarpe / Sneakers': 'scarpe',
+    'Accessorio': 'accessorio',
+  };
   return {
     configured: true,
     result: {
-      name: String(r.name ?? 'Capo'),
-      category: String(r.category ?? 'maglia'),
-      colors: Array.isArray(r.colors) ? r.colors.map((c) => String(c)) : ['neutro'],
-      color_hex: String(r.color_hex ?? '#c8b89a'),
-      notes: String(r.notes ?? ''),
+      name: String(r.nome ?? 'Capo'),
+      category: categoryMap[String(r.categoria)] ?? 'maglia',
+      color: String(r.colore ?? 'neutro'),
+      season: String(r.stagione ?? 'Quattro stagioni'),
+      material: String(r.materiale ?? 'Misto'),
+      avatar_section: String(r.sezione_avatar ?? 'busto'),
     },
   };
 }
@@ -44,7 +57,7 @@ export async function generateOutfit(
   occasion: Occasion | string,
   weather?: string
 ): Promise<{ configured: boolean; result?: OutfitProposal; error?: string }> {
-  const payload = garments.map((g) => ({ id: g.id, name: g.name, category: g.category, color: g.color }));
+  const payload = garments.map((g) => ({ id: g.id, name: g.name, category: g.category, color: g.color, avatar_section: g.avatar_section }));
   const { data } = await supabase.functions.invoke('generate-outfit', {
     body: { garments: payload, occasion, weather },
   });
@@ -73,7 +86,7 @@ export async function generateAvatar(
   occasion: Occasion | string,
   styleNote?: string
 ): Promise<{ configured: boolean; result?: AvatarResult; error?: string }> {
-  const payload = garments.map((g) => ({ name: g.name, category: g.category, color: g.color }));
+  const payload = garments.map((g) => ({ name: g.name, category: g.category, color: g.color, avatar_section: g.avatar_section }));
   const { data } = await supabase.functions.invoke('generate-avatar', {
     body: { garments: payload, occasion, styleNote },
   });

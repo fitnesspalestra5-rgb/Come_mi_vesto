@@ -26,6 +26,9 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
   const [color, setColor] = useState('neutro');
   const [colorHex, setColorHex] = useState('#c8b89a');
   const [notes, setNotes] = useState('');
+  const [season, setSeason] = useState('Quattro stagioni');
+  const [material, setMaterial] = useState('Misto');
+  const [avatarSection, setAvatarSection] = useState('busto');
   const [busy, setBusy] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
@@ -38,6 +41,9 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
       setColor(editing.color);
       setColorHex(editing.color_hex);
       setNotes(editing.notes ?? '');
+      setSeason(editing.season ?? 'Quattro stagioni');
+      setMaterial(editing.material ?? 'Misto');
+      setAvatarSection(editing.avatar_section ?? 'busto');
     }
   }, [editing]);
 
@@ -75,9 +81,11 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
       if (res.result) {
         setName(res.result.name);
         setCategory(res.result.category);
-        setColor(res.result.colors[0] ?? 'neutro');
-        setColorHex(res.result.color_hex);
-        if (res.result.notes) setNotes(res.result.notes);
+        setColor(res.result.color);
+        setColorHex(hexForColor(res.result.color));
+        setSeason(res.result.season);
+        setMaterial(res.result.material);
+        setAvatarSection(res.result.avatar_section);
       } else if (res.error) {
         setError(res.error);
       }
@@ -99,7 +107,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
         const { path } = await uploadGarmentImage(compressed, user.id);
         imagePath = path;
       }
-      const payload = { name, category, color, color_hex: colorHex, notes, image_path: imagePath };
+      const payload = { name, category, color, color_hex: colorHex, notes, season, material, avatar_section: avatarSection, image_path: imagePath };
       if (editing) {
         const { error } = await supabase.from('garments').update(payload).eq('id', editing.id);
         if (error) throw new Error(error.message);
