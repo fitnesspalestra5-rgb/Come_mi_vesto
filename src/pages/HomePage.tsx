@@ -1,45 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Shirt, Sparkles, Cloud, Palette, Camera, ArrowRight } from 'lucide-react';
+import { useMemo } from 'react';
+import { Shirt, Heart, Cloud, Palette, Camera, ArrowRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
-import { supabase } from '@/lib/supabase';
 import { BG } from '@/lib/backgrounds';
-import type { Garment, Outfit } from '@/lib/types';
-import { getSignedImageUrl } from '@/lib/images';
+import { useGarments, withImageUrls } from '@/lib/garments';
 
 export function HomePage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
-  const [garmentCount, setGarmentCount] = useState(0);
-  const [outfitCount, setOutfitCount] = useState(0);
-  const [recent, setRecent] = useState<{ id: string; url: string }[]>([]);
+  const { garments } = useGarments();
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const [{ count: g }, { count: o }] = await Promise.all([
-        supabase.from('garments').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('outfits').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-      ]);
-      setGarmentCount(g ?? 0);
-      setOutfitCount(o ?? 0);
-
-      const { data: recentGarments } = await supabase
-        .from('garments')
-        .select('id, image_path')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(6);
-
-      const withUrls = await Promise.all(
-        (recentGarments ?? []).map(async (g) => ({
-          id: g.id,
-          url: g.image_path ? (await getSignedImageUrl(g.image_path)) ?? '' : '',
-        }))
-      );
-      setRecent(withUrls.filter((r) => r.url));
-    })();
-  }, [user]);
+  const recent = useMemo(() => withImageUrls(garments.slice(0, 6)), [garments]);
+  const favoriteCount = useMemo(() => garments.filter((g) => g.favorite).length, [garments]);
 
   const name = user?.email?.split('@')[0] ?? 'bellə';
 
@@ -49,6 +21,7 @@ export function HomePage() {
         <img
           src={BG.home}
           alt=""
+          decoding="async"
           className="absolute inset-0 w-full h-full object-cover object-top"
           style={{ objectPosition: 'center top' }}
         />
@@ -68,8 +41,8 @@ export function HomePage() {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Stat label="Capi" value={garmentCount} icon={<Shirt size={16} />} />
-            <Stat label="Outfit" value={outfitCount} icon={<Sparkles size={16} />} />
+            <Stat label="Capi" value={garments.length} icon={<Shirt size={16} />} />
+            <Stat label="Preferiti" value={favoriteCount} icon={<Heart size={16} />} />
           </div>
         </div>
 
@@ -78,7 +51,7 @@ export function HomePage() {
           className="btn-primary w-full animate-fade-up"
           style={{ animationDelay: '80ms' }}
         >
-          <Camera size={18} /> Fotografa un capo
+          <Camera size={18} /> Aggiungi un capo
         </button>
 
         <div className="grid grid-cols-3 gap-3 animate-fade-up" style={{ animationDelay: '140ms' }}>
@@ -89,11 +62,11 @@ export function HomePage() {
 
         {recent.length > 0 && (
           <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
-            <h2 className="font-display text-lg text-cream-900 mb-3 px-1">Aggiunti di recente</h2>
+            <h2 className="font-display text-lg text-cream-900 mb-3 px-1">In evidenza</h2>
             <div className="grid grid-cols-3 gap-2.5">
               {recent.map((r) => (
                 <div key={r.id} className="aspect-square rounded-xl overflow-hidden bg-cream-100 shadow-soft">
-                  <img src={r.url} alt="" className="w-full h-full object-cover" />
+                  <img src={r.imageUrl ?? ''} alt={r.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

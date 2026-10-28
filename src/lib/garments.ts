@@ -1,79 +1,67 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/lib/auth';
+import { useCallback, useEffect, useState } from 'react';
 import type { Garment } from '@/lib/types';
-import { getSignedImageUrl } from '@/lib/images';
-import { GarmentCard } from '@/components/GarmentCard';
+import { loadGarments, saveGarments, makeId } from '@/lib/catalog';
 
-export function useGarments() {
-  const { user } = useAuth();
-  const [garments, setGarments] = useState<Garment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = async () => {
-    if (!user) return;
-    setLoading(true);
-    setError(null);
-    const { data, error } = await supabase
-      .from('garments')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (error) setError(error.message);
-    setGarments((data ?? []) as Garment[]);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    load();
-    // realtime
-    const channel = supabase
-      .channel('garments-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'garments', filter: `user_id=eq.${user?.id}` }, () => load())
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
-
-  return { garments, loading, error, reload: load };
-}
+// Archivio in memoria + localStorage: istantaneo, senza backend e senza chiamate AI.
 
 export interface GarmentWithUrl extends Garment {
   imageUrl: string | null;
 }
 
-// Mappa i capi aggiungendo un URL firmato per ogni immagine.
-export async function withSignedUrls(garments: Garment[]): Promise<GarmentWithUrl[]> {
-  return Promise.all(
-    garments.map(async (g) => ({
-      ...g,
-      imageUrl: g.image_path ? await getSignedImageUrl(g.image_path) : null,
-    }))
-  );
+const listeners = new Set<() => void>();
+let cache: Garment[] | null = null;
+
+function getStore(): Garment[] {
+  if (!cache) cache = loadGarments();
+  return cache;
+}
+
+function commit(garments: Garment[]) {
+  cache = garments;
+  saveGarments(garments);
+  listeners.forEach((l) => l());
+}
+
+export function useGarments() {
+  const [garments, setGarments] = useState<Garment[]>(() => getStore());
+
+  const reload = useCallback(() => {
+    setGarments([...getStore()]);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setGarments([...getStore()]);
+    listeners.add(update);
+    return () => { listeners.delete(update); };
+  }, []);
+
+  return { garments, loading: false, error: null as string | null, reload };
+}
+
+// Le foto sono file statici pubblici: l'URL coincide con image_path.
+export function withImageUrls(garments: Garment[]): GarmentWithUrl[] {
+  return garments.map((g) => ({ ...g, imageUrl: g.image_path }));
 }
 
 export async function deleteGarment(garment: Garment): Promise<void> {
-  if (garment.image_path) {
-    await supabase.storage.from('garments').remove([garment.image_path]);
-  }
-  const { error } = await supabase.from('garments').delete().eq('id', garment.id);
-  if (error) throw new Error(error.message);
+  commit(getStore().filter((g) => g.id !== garment.id));
 }
 
 export async function toggleFavorite(garment: Garment): Promise<void> {
-  const { error } = await supabase
-    .from('garments')
-    .update({ favorite: !garment.favorite })
-    .eq('id', garment.id);
-  if (error) throw new Error(error.message);
+  commit(getStore().map((g) => (g.id === garment.id ? { ...g, favorite: !g.favorite } : g)));
 }
 
 export async function updateGarment(id: string, patch: Partial<Garment>): Promise<void> {
-  const { error } = await supabase.from('garments').update(patch).eq('id', id);
-  if (error) throw new Error(error.message);
+  commit(getStore().map((g) => (g.id === id ? { ...g, ...patch } : g)));
 }
 
-export type { GarmentCard };
+export async function insertGarment(payload: Omit<Garment, 'id' | 'user_id' | 'favorite' | 'created_at'>): Promise<void> {
+  const garment: Garment = {
+    ...payload,
+    id: makeId(),
+    user_id: 'local',
+    favorite: false,
+    created_at: new Date().toISOString(),
+  };
+  commit([garment, ...getStore()]);
+}

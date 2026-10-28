@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Palette, Sparkles } from 'lucide-react';
 import { PageHeader, EmptyState } from '@/components/ui';
-import { useGarments, withSignedUrls } from '@/lib/garments';
+import { useGarments } from '@/lib/garments';
 import { suggestHarmony, readableTextColor, NAMED_COLORS } from '@/lib/colors';
 import { useEffect } from 'react';
 

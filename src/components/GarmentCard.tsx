@@ -21,7 +21,7 @@ export function GarmentCard({
     <div className="card overflow-hidden group animate-fade-up">
       <button onClick={onClick} className="block w-full aspect-square bg-cream-100 relative">
         {garment.imageUrl ? (
-          <img src={garment.imageUrl} alt={garment.name} className="w-full h-full object-cover" />
+          <img src={garment.imageUrl} alt={garment.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-cream-400 text-xs">Nessuna foto</div>
         )}

@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, Shirt, Plus, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { useGarments, withSignedUrls, deleteGarment, toggleFavorite, type GarmentWithUrl } from '@/lib/garments';
+import { useGarments, withImageUrls, deleteGarment, toggleFavorite, type GarmentWithUrl } from '@/lib/garments';
 import { CATEGORIES } from '@/lib/types';
 import { GarmentCard } from '@/components/GarmentCard';
 import { GarmentForm } from '@/components/GarmentForm';
 import { PageHeader, EmptyState, Banner } from '@/components/ui';
 import type { Garment } from '@/lib/types';
 
+const PAGE_SIZE = 12;
+
 export function GuardarobaPage() {
   const { params } = useRouter();
   const { garments, loading, error, reload } = useGarments();
-  const [withUrls, setWithUrls] = useState<GarmentWithUrl[]>([]);
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<string>('all');
   const [colorFilter, setColorFilter] = useState<string>('all');
@@ -19,6 +20,7 @@ export function GuardarobaPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Garment | null>(null);
   const [toDelete, setToDelete] = useState<GarmentWithUrl | null>(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     if (params.action === 'add') {
@@ -28,14 +30,16 @@ export function GuardarobaPage() {
   }, [params.action]);
 
   useEffect(() => {
-    withSignedUrls(garments).then(setWithUrls);
-  }, [garments]);
+    setVisibleCount(PAGE_SIZE);
+  }, [query, catFilter, colorFilter]);
 
   const colors = useMemo(() => {
     const set = new Map<string, string>();
     garments.forEach((g) => set.set(g.color, g.color_hex));
     return Array.from(set.entries()).map(([name, hex]) => ({ name, hex }));
   }, [garments]);
+
+  const withUrls = useMemo(() => withImageUrls(garments), [garments]);
 
   const filtered = useMemo(() => {
     return withUrls.filter((g) => {
@@ -48,6 +52,9 @@ export function GuardarobaPage() {
       return true;
     });
   }, [withUrls, catFilter, colorFilter, query]);
+
+  const visible = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visible.length;
 
   const onToggleFav = async (g: GarmentWithUrl) => {
     try { await toggleFavorite(g); reload(); } catch (e) { console.error(e); }
@@ -114,13 +121,13 @@ export function GuardarobaPage() {
           <p className="text-center text-cream-600 py-10">Caricamento…</p>
         ) : filtered.length === 0 ? (
           garments.length === 0 ? (
-            <EmptyState icon={<Shirt size={28} />} title="Il guardaroba è vuoto" hint="Aggiungi il primo capo fotografandolo. L'AI riconosce tipo e colore." />
+            <EmptyState icon={<Shirt size={28} />} title="Il guardaroba è vuoto" hint="Aggiungi il primo capo fotografandolo." />
           ) : (
             <EmptyState icon={<Search size={28} />} title="Nessun capo trovato" hint="Modifica la ricerca o i filtri." />
           )
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {filtered.map((g) => (
+            {visible.map((g) => (
               <GarmentCard
                 key={g.id}
                 garment={g}
@@ -130,6 +137,12 @@ export function GuardarobaPage() {
               />
             ))}
           </div>
+        )}
+
+        {remaining > 0 && (
+          <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)} className="btn-secondary w-full mt-4">
+            Mostra altri {Math.min(PAGE_SIZE, remaining)} capi ({remaining} rimanenti)
+          </button>
         )}
       </div>
 
@@ -146,7 +159,7 @@ export function GuardarobaPage() {
               </div>
               <h3 className="font-display text-lg text-cream-900">Eliminare "{toDelete.name}"?</h3>
             </div>
-            <p className="text-sm text-cream-700 mb-4">Il capo e la sua foto verranno rimossi definitivamente dal tuo guardaroba.</p>
+            <p className="text-sm text-cream-700 mb-4">Il capo verrà rimosso definitivamente dal tuo guardaroba.</p>
             <div className="flex gap-2">
               <button onClick={() => setToDelete(null)} className="btn-ghost flex-1">Annulla</button>
               <button onClick={confirmDelete} className="btn-primary bg-terracotta-600 flex-1">Elimina</button>
