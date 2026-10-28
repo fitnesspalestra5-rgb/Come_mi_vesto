@@ -87,6 +87,7 @@ export async function geminiTextJson(
       generationConfig: {
         temperature: 0.4,
         maxOutputTokens: maxTokens,
+        thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: "application/json",
       },
     }),
@@ -138,6 +139,7 @@ export async function geminiVisionJson(
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: maxTokens,
+        thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: "application/json",
       },
     }),

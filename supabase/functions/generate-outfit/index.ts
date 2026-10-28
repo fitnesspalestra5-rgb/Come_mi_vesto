@@ -38,7 +38,7 @@ Deno.serve(async (req: Request) => {
       '"reason": breve spiegazione in italiano di perché funziona, "tips": consiglio accessorio opzionale}. ' +
       "Scegli almeno 2-4 capi se disponibili.";
 
-    const result = await geminiTextJson(cfg.apiKey!, GEMINI_TEXT_MODEL, prompt, 600);
+    const result = await geminiTextJson(cfg.apiKey!, GEMINI_TEXT_MODEL, prompt, 1024);
     if (!result.ok) {
       return jsonReply({ configured: true, error: result.error }, 502);
     }

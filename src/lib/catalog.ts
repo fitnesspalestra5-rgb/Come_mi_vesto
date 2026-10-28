@@ -1,12 +1,7 @@
-// Archivio del guardaroba basato su file statici locali.
-// Le foto dei capi risiedono in /assets/images e vengono servite direttamente
-// dal browser: niente storage Supabase, niente URL firmati, niente chiamate AI.
-// I metadati (categoria, colore, sezione avatar) si salvano nel browser così le
-// modifiche restano tra un reload e l'altro.
-
 import type { Garment } from '@/lib/types';
 
-const STORE_KEY = 'cmv_wardrobe_v1';
+// Foto dei capi già presenti in public/assets/images: vengono inserite nell'archivio
+// Supabase una sola volta per utente, con metadati neutri da rifinire a mano.
 
 const GARMENT_FILES: string[] = [
   'IMG_2190.jpeg',
@@ -82,52 +77,30 @@ export const SECTION_BY_CATEGORY: Record<string, Garment['avatar_section']> = {
   accessorio: 'busto',
 };
 
-function seedGarments(): Garment[] {
-  const now = Date.now();
-  return GARMENT_FILES.map((file, i) => ({
-    id: `seed-${i}`,
-    user_id: 'local',
-    name: `Capo ${i + 1}`,
-    category: 'maglia',
-    color: 'neutro',
-    color_hex: '#c8b89a',
-    image_path: `/assets/images/${file}`,
-    notes: null,
-    season: 'Quattro stagioni',
-    material: 'Misto',
-    avatar_section: 'busto',
-    favorite: false,
-    created_at: new Date(now - i * 1000).toISOString(),
-  }));
+export interface CatalogPhoto {
+  image_path: string;
+  name: string;
 }
 
-function isGarmentArray(v: unknown): v is Garment[] {
-  return Array.isArray(v) && v.every((g) => g && typeof g.id === 'string' && typeof g.image_path === 'string');
-}
+export const CATALOG_PHOTOS: CatalogPhoto[] = GARMENT_FILES.map((file, i) => ({
+  image_path: `/assets/images/${file}`,
+  name: `Capo ${i + 1}`,
+}));
 
-export function loadGarments(): Garment[] {
+const LEGACY_KEY = 'cmv_wardrobe_v1';
+
+// Modifiche fatte nella versione precedente, salvate solo nel browser.
+export function readLegacyCatalog(): Garment[] {
   try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (isGarmentArray(parsed)) return parsed;
-    }
+    const raw = localStorage.getItem(LEGACY_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Garment[]) : [];
   } catch {
-    // archivio corrotto: si riparte dalla semina
-  }
-  const seeded = seedGarments();
-  saveGarments(seeded);
-  return seeded;
-}
-
-export function saveGarments(garments: Garment[]): void {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(garments));
-  } catch {
-    // storage pieno o non disponibile
+    return [];
   }
 }
 
-export function makeId(): string {
-  return `g-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+export function clearLegacyCatalog(): void {
+  localStorage.removeItem(LEGACY_KEY);
 }

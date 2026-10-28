@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
       '"materiale":"uno tra Cotone, Lino, Denim, Lana, Poliestere, Misto, Pelle / Camoscio",' +
       '"sezione_avatar":"busto", "gambe" oppure "scarpe"}.';
 
-    const result = await geminiVisionJson(cfg.apiKey!, GEMINI_VISION_MODEL, prompt, imageBase64, "image/jpeg", 400);
+    const result = await geminiVisionJson(cfg.apiKey!, GEMINI_VISION_MODEL, prompt, imageBase64, "image/jpeg", 1024);
     if (!result.ok) {
       return jsonReply({ configured: true, error: result.error }, 502);
     }
