@@ -73,51 +73,85 @@ function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: n
   return { h, s, l };
 }
 
+function hslOf(hex: string): { h: number; s: number; l: number } {
+  const { r, g, b } = hexToRgb(hex);
+  return rgbToHsl(r, g, b);
+}
+
+function hueDistance(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return Math.min(d, 360 - d);
+}
+
+export const MAX_HARMONY_COLORS = 8;
+
+const NEUTRAL_SATURATION = 0.15;
+const HARMONY_HUE_OFFSETS = [30, 150, 180, 210, 330];
+const TRIAD_HUE_OFFSETS = [120, 240];
+
 export interface ColorHarmony {
   colors: NamedColor[];
   description: string;
 }
 
-// Suggerisce colori coordinati con un colore di base, con spiegazione.
+function scoreAgainstChromaticBase(
+  base: { h: number; s: number; l: number },
+  candidate: { h: number; s: number; l: number },
+): number | null {
+  if (candidate.s < NEUTRAL_SATURATION) {
+    return 60 + Math.abs(candidate.l - base.l) * 40;
+  }
+
+  const dh = hueDistance(base.h, candidate.h);
+  const dl = Math.abs(candidate.l - base.l);
+
+  if (dh < 20 && dl < 0.2) return null;
+  if (base.s > 0.5 && candidate.s > 0.5 && dh > 50 && dh < 130) return null;
+
+  const offsetDiff = Math.min(
+    ...HARMONY_HUE_OFFSETS.map((o) => Math.abs(dh - o)),
+    ...TRIAD_HUE_OFFSETS.map((o) => Math.abs(dh - o) + 15),
+  );
+  return 100 - offsetDiff * 2 + Math.min(dl, 0.4) * 20;
+}
+
+function scoreAgainstNeutralBase(
+  base: { h: number; s: number; l: number },
+  candidate: { h: number; s: number; l: number },
+): number | null {
+  const dl = Math.abs(candidate.l - base.l);
+  if (candidate.s < NEUTRAL_SATURATION) {
+    return dl < 0.08 ? null : 55 + dl * 40;
+  }
+  return 60 + candidate.s * 40 + dl * 20;
+}
+
+// Suggerisce fino a MAX_HARMONY_COLORS colori coordinati con un colore di base.
 export function suggestHarmony(baseHex: string): ColorHarmony {
-  const { r, g, b } = hexToRgb(baseHex);
-  const { h, s, l } = rgbToHsl(r, g, b);
+  const base = hslOf(baseHex);
+  const baseIsNeutral = base.s < NEUTRAL_SATURATION;
+  const scoreFn = baseIsNeutral ? scoreAgainstNeutralBase : scoreAgainstChromaticBase;
 
-  const nearest = (targetH: number): NamedColor => {
-    let best = NAMED_COLORS[0];
-    let bestDist = Infinity;
-    for (const c of NAMED_COLORS) {
-      const rgb = hexToRgb(c.hex);
-      const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-      // distanza pesata su hue + luminanza
-      const dh = Math.min(Math.abs(hsl.h - targetH), 360 - Math.abs(hsl.h - targetH));
-      const dl = Math.abs(hsl.l - l);
-      const dist = dh * 1.5 + dl * 1.0 + Math.abs(hsl.s - s) * 0.5;
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = c;
-      }
-    }
-    return best;
-  };
+  const colors = NAMED_COLORS
+    .filter((c) => c.hex.toLowerCase() !== baseHex.toLowerCase())
+    .map((c) => ({ color: c, score: scoreFn(base, hslOf(c.hex)) }))
+    .filter((x): x is { color: NamedColor; score: number } => x.score !== null)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_HARMONY_COLORS)
+    .map((x) => x.color);
 
-  const analog1 = nearest((h + 30) % 360);
-  const analog2 = nearest((h + 330) % 360);
-  const comp = nearest((h + 180) % 360);
-  const neutral = NAMED_COLORS.find((c) => c.name === 'beige')!;
-
-  if (s < 0.15) {
+  if (baseIsNeutral) {
     return {
-      colors: [NAMED_COLORS.find((c) => c.name === 'terracotta')!, NAMED_COLORS.find((c) => c.name === 'oliva')!, comp],
+      colors,
       description:
-        'Essendo un colore neutro, si abbina con toni caldi come terracotta e oliva, o con un colore complementare acceso per dare carattere.',
+        'Essendo un colore neutro, si abbina bene con toni caldi e colori accesi, oppure con altri neutri a contrasto di luminosità.',
     };
   }
 
   return {
-    colors: [analog1, analog2, comp, neutral],
+    colors,
     description:
-      `Toni analoghi (${analog1.name}, ${analog2.name}) creano armonia morbida; il complementare (${comp.name}) aggiunge contrasto; il beige bilancia l'insieme.`,
+      'Gli abbinamenti sono ordinati per affinità: prima i toni vicini e armonici, poi quelli a contrasto e i colori che bilanciano l\'insieme.',
   };
 }
 
