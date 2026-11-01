@@ -3,15 +3,15 @@
   "functions": {
     "analyze-garment": {
       "hasChanged": false,
-      "hash": "ca86980bb6e5ae9196434525e4e4d9536d31589c48adf0e19e61eb677c8cc706cc5b6ade902dbd3fd344478e27a808fe60774358f42075a68c345a286e7d050d"
+      "hash": "bc8dd29ae08248380696a03ef48d5567bf331e2f12cff699e03ec4a8bf2448bcdefaa11b2560ddc9591622a392be9a94481e2f99d3a30bb53601ac91110e3f06"
     },
     "generate-avatar": {
       "hasChanged": false,
-      "hash": "bda7dabe5f90ebec00317aaef6123870428944b347a13ae1875537bfc7aa5621cc5b6ade902dbd3fd344478e27a808fe60774358f42075a68c345a286e7d050d"
+      "hash": "bda7dabe5f90ebec00317aaef6123870428944b347a13ae1875537bfc7aa5621defaa11b2560ddc9591622a392be9a94481e2f99d3a30bb53601ac91110e3f06"
     },
     "generate-outfit": {
       "hasChanged": false,
-      "hash": "c60feacd6026cfa017c30b46a4a3ce51fc61af6e50bc60d82e2288c28bb9b58dcc5b6ade902dbd3fd344478e27a808fe60774358f42075a68c345a286e7d050d"
+      "hash": "c60feacd6026cfa017c30b46a4a3ce51fc61af6e50bc60d82e2288c28bb9b58ddefaa11b2560ddc9591622a392be9a94481e2f99d3a30bb53601ac91110e3f06"
     }
   }
 }

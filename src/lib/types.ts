@@ -63,6 +63,21 @@ export interface Outfit {
   items?: OutfitItem[];
 }
 
+export const SECTION_BY_CATEGORY: Record<string, AvatarSection> = {
+  maglia: 'busto',
+  maglione: 'busto',
+  felpa: 'busto',
+  camicia: 'busto',
+  giacca: 'busto',
+  cappotto: 'busto',
+  vestito: 'busto',
+  pantalone: 'gambe',
+  jeans: 'gambe',
+  gonna: 'gambe',
+  scarpe: 'scarpe',
+  accessorio: 'busto',
+};
+
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'maglia', label: 'Maglia' },
   { value: 'maglione', label: 'Maglione' },

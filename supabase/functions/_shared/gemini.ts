@@ -4,7 +4,7 @@
 // al frontend. Tutte le funzioni AI del progetto usano questo modulo.
 
 export const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
-export const GEMINI_VISION_MODEL = "gemini-2.5-flash";
+export const GEMINI_VISION_MODEL = "gemini-3.5-flash";
 export const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 
 export const corsHeaders = {
@@ -114,22 +114,29 @@ export async function geminiTextJson(
   return { ok: true, json: parsed };
 }
 
-// Chiamata con visione (immagine + testo) e risposta JSON.
+export interface VisionExample {
+  label: string;
+  data: string;
+}
+
+// Chiamata con visione (immagine + testo) e risposta JSON. Gli esempi JPEG in base64 precedono la foto da analizzare.
 export async function geminiVisionJson(
   apiKey: string,
   model: string,
   prompt: string,
   imageBase64: string,
   mimeType = "image/jpeg",
-  maxTokens = 800
+  maxTokens = 800,
+  examples: VisionExample[] = []
 ): Promise<{ ok: true; json: Record<string, unknown> } | { ok: false; error: string }> {
   const cleanBase64 = imageBase64.startsWith("data:") ? imageBase64.split(",")[1] : imageBase64;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-  const parts: GeminiPart[] = [
-    { text: prompt },
-    { inlineData: { mimeType, data: cleanBase64 } },
-  ];
+  const parts: GeminiPart[] = [{ text: prompt }];
+  for (const example of examples) {
+    parts.push({ text: example.label }, { inlineData: { mimeType: "image/jpeg", data: example.data } });
+  }
+  parts.push({ text: "Foto del capo da analizzare:" }, { inlineData: { mimeType, data: cleanBase64 } });
 
   const res = await fetch(url, {
     method: "POST",

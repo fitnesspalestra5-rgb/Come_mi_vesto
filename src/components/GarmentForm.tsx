@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
 import type { Garment } from '@/lib/types';
-import { CATEGORIES } from '@/lib/types';
+import { CATEGORIES, SECTION_BY_CATEGORY } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
 import { hexForColor, NAMED_COLORS } from '@/lib/colors';
-import { SECTION_BY_CATEGORY } from '@/lib/catalog';
 import { Banner } from '@/components/ui';
 
 interface Props {
