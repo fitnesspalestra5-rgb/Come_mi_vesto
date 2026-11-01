@@ -3,14 +3,14 @@ import { Shirt, Heart, Cloud, Palette, Camera, ArrowRight, Sparkles } from 'luci
 import { useAuth } from '@/lib/auth';
 import { useRouter } from '@/lib/router';
 import { BG } from '@/lib/backgrounds';
-import { useGarments, withImageUrls } from '@/lib/garments';
+import { useGarments } from '@/lib/garments';
 
 export function HomePage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
   const { garments } = useGarments();
 
-  const recent = useMemo(() => withImageUrls(garments.slice(0, 6)), [garments]);
+  const recent = useMemo(() => garments.slice(0, 6), [garments]);
   const favoriteCount = useMemo(() => garments.filter((g) => g.favorite).length, [garments]);
 
   const name = user?.email?.split('@')[0] ?? 'bellə';

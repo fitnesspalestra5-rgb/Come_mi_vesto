@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, Shirt, Plus, AlertTriangle, SlidersHorizontal } from 'lucide-react';
 import { useRouter } from '@/lib/router';
-import { useGarments, withImageUrls, deleteGarment, toggleFavorite, type GarmentWithUrl } from '@/lib/garments';
+import { useGarments, deleteGarment, toggleFavorite, type GarmentWithUrl } from '@/lib/garments';
 import { CATEGORIES } from '@/lib/types';
 import { GarmentCard } from '@/components/GarmentCard';
 import { GarmentForm } from '@/components/GarmentForm';
@@ -39,10 +39,8 @@ export function GuardarobaPage() {
     return Array.from(set.entries()).map(([name, hex]) => ({ name, hex }));
   }, [garments]);
 
-  const withUrls = useMemo(() => withImageUrls(garments), [garments]);
-
   const filtered = useMemo(() => {
-    return withUrls.filter((g) => {
+    return garments.filter((g) => {
       if (catFilter !== 'all' && g.category !== catFilter) return false;
       if (colorFilter !== 'all' && g.color !== colorFilter) return false;
       if (query) {
@@ -51,7 +49,7 @@ export function GuardarobaPage() {
       }
       return true;
     });
-  }, [withUrls, catFilter, colorFilter, query]);
+  }, [garments, catFilter, colorFilter, query]);
 
   const visible = filtered.slice(0, visibleCount);
   const remaining = filtered.length - visible.length;

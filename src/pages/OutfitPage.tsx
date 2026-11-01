@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { PageHeader, EmptyState } from '@/components/ui';
-import { useGarments, withImageUrls } from '@/lib/garments';
+import { useGarments } from '@/lib/garments';
 import { OCCASIONS, type Occasion } from '@/lib/types';
 
 export function OutfitPage() {
   const { garments } = useGarments();
   const [occasion, setOccasion] = useState<Occasion>('tempo_libero');
 
-  const withUrls = useMemo(() => withImageUrls(garments), [garments]);
-
   const suggestion = useMemo(() => {
-    const bySection = (s: string) => withUrls.find((g) => g.avatar_section === s);
+    const bySection = (s: string) => garments.find((g) => g.avatar_section === s);
     return { busto: bySection('busto'), gambe: bySection('gambe'), scarpe: bySection('scarpe') };
-  }, [withUrls]);
+  }, [garments]);
 
   const occLabel = OCCASIONS.find((o) => o.value === occasion)?.label ?? occasion;
 

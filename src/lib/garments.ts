@@ -55,7 +55,7 @@ async function seedCatalogPhotos(userId: string): Promise<void> {
 export function useGarments() {
   const { user } = useAuth();
   const userId = user?.id;
-  const [garments, setGarments] = useState<Garment[]>([]);
+  const [garments, setGarments] = useState<GarmentWithUrl[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,7 +70,7 @@ export function useGarments() {
       setError(error.message);
     } else {
       setError(null);
-      setGarments((data ?? []) as Garment[]);
+      setGarments(await withSignedUrls((data ?? []) as Garment[]));
     }
     setLoading(false);
   }, [userId]);
@@ -99,7 +99,7 @@ export function useGarments() {
   return { garments, loading, error, reload: load };
 }
 
-export async function withSignedUrls(garments: Garment[]): Promise<GarmentWithUrl[]> {
+async function withSignedUrls(garments: Garment[]): Promise<GarmentWithUrl[]> {
   return Promise.all(
     garments.map(async (g) => ({ ...g, imageUrl: await resolveImageUrl(g.image_path) }))
   );

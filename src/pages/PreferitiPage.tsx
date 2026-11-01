@@ -1,6 +1,6 @@
 import { Heart, Shirt } from 'lucide-react';
 import { PageHeader, EmptyState } from '@/components/ui';
-import { useGarments, withImageUrls, toggleFavorite } from '@/lib/garments';
+import { useGarments, toggleFavorite } from '@/lib/garments';
 import { GarmentCard } from '@/components/GarmentCard';
 import { useRouter } from '@/lib/router';
 import { useMemo } from 'react';
@@ -9,7 +9,7 @@ export function PreferitiPage() {
   const { navigate } = useRouter();
   const { garments, reload } = useGarments();
 
-  const favGarments = useMemo(() => withImageUrls(garments).filter((g) => g.favorite), [garments]);
+  const favGarments = useMemo(() => garments.filter((g) => g.favorite), [garments]);
 
   return (
     <div className="min-h-screen pb-24">
