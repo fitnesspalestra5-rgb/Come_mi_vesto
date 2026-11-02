@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
-import type { Garment } from '@/lib/types';
+import type { Garment, GarmentMaterial, GarmentSeason } from '@/lib/types';
 import { CATEGORIES, SECTION_BY_CATEGORY } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
 import { hexForColor, NAMED_COLORS } from '@/lib/colors';
 import { Banner } from '@/components/ui';
+import { useAuth } from '@/lib/auth';
+import { analyzeGarment } from '@/lib/ai';
+import { compressImage, dominantColorHex, fileToBase64, uploadGarmentImage } from '@/lib/images';
 
 interface Props {
   editing?: Garment | null;
@@ -21,11 +24,16 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
   const [color, setColor] = useState('neutro');
   const [colorHex, setColorHex] = useState('#c8b89a');
   const [notes, setNotes] = useState('');
-  const [season, setSeason] = useState('Quattro stagioni');
-  const [material, setMaterial] = useState('Misto');
+  const [season, setSeason] = useState<GarmentSeason>('Quattro stagioni');
+  const [material, setMaterial] = useState<GarmentMaterial>('Misto');
   const [avatarSection, setAvatarSection] = useState<string>('busto');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const analysisRef = useRef(0);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (editing) {
@@ -58,7 +66,37 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
 
   const onPick = (file: File) => {
     setPreview(URL.createObjectURL(file));
+    setPickedFile(file);
     setError(null);
+    void analyzePhoto(file);
+  };
+
+  const analyzePhoto = async (file: File) => {
+    const requestId = ++analysisRef.current;
+    const isCurrent = () => requestId === analysisRef.current;
+    setAnalyzing(true);
+    setAiNote(null);
+    try {
+      const blob = await compressImage(file);
+      const [res, hex] = await Promise.all([analyzeGarment(await fileToBase64(blob)), dominantColorHex(blob)]);
+      if (!isCurrent()) return;
+      if (!res.result) {
+        setAiNote(res.error || 'Riconoscimento automatico non disponibile. Compila i campi a mano.');
+        return;
+      }
+      const r = res.result;
+      setName((current) => (current.trim() ? current : r.name));
+      setCategory(r.category);
+      setAvatarSection(SECTION_BY_CATEGORY[r.category] ?? 'busto');
+      setColor(r.color.toLowerCase());
+      setColorHex(hex ?? hexForColor(r.color));
+      setSeason(r.season);
+      setMaterial(r.material);
+    } catch (e) {
+      if (isCurrent()) setAiNote((e as Error).message);
+    } finally {
+      if (isCurrent()) setAnalyzing(false);
+    }
   };
 
   const onCategoryChange = (value: string) => {
@@ -74,6 +112,10 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
     setBusy(true);
     setError(null);
     try {
+      if (!user) throw new Error('Sessione non valida. Accedi di nuovo.');
+      const imagePath = pickedFile
+        ? await uploadGarmentImage(await compressImage(pickedFile), user.id)
+        : (editing?.image_path ?? null);
       const payload = {
         name: name.trim(),
         category,
@@ -83,12 +125,13 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
         season,
         material,
         avatar_section: avatarSection as Garment['avatar_section'],
-        image_path: editing?.image_path ?? null,
+        image_path: imagePath,
+        favorite: editing?.favorite ?? false,
       };
       if (editing) {
         await updateGarment(editing.id, payload);
       } else {
-        await insertGarment(payload);
+        await insertGarment(user.id, payload);
       }
       onSaved();
       onClose();
@@ -137,10 +180,12 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
           >
             <Camera size={32} className="text-terracotta-500" />
             <span className="text-sm font-medium">Scatta o scegli una foto</span>
-            <span className="text-xs text-cream-500">Compila i campi a mano in pochi secondi</span>
+            <span className="text-xs text-cream-500">L'AI riconosce tipo, colore, stagione e materiale</span>
           </button>
         )}
 
+        {analyzing && <div className="mb-3"><Banner tone="info">Riconosco il capo dalla foto…</Banner></div>}
+        {aiNote && <div className="mb-3"><Banner tone="warn">{aiNote}</Banner></div>}
         {error && <div className="mb-3"><Banner tone="warn">{error}</Banner></div>}
 
         <div className="space-y-3">
@@ -186,7 +231,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
 
         <div className="flex gap-2 mt-5">
           <button onClick={onClose} className="btn-ghost flex-1">Annulla</button>
-          <button onClick={save} disabled={busy || !name} className="btn-primary flex-1">
+          <button onClick={save} disabled={busy || analyzing || !name} className="btn-primary flex-1">
             {busy ? 'Salvo…' : <>Salva <Check size={16} /></>}
           </button>
         </div>

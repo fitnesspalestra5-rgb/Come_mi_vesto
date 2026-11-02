@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { Garment, Occasion } from '@/lib/types';
+import type { Garment, GarmentMaterial, GarmentSeason, Occasion } from '@/lib/types';
 
 // Le chiamate AI partono solo su azione esplicita dell'utente, mai all'apertura dell'archivio.
 
@@ -7,8 +7,8 @@ export interface GarmentAnalysis {
   name: string;
   category: string;
   color: string;
-  season: string;
-  material: string;
+  season: GarmentSeason;
+  material: GarmentMaterial;
   avatar_section: string;
 }
 
@@ -51,6 +51,13 @@ const CATEGORY_MAP: Record<string, string> = {
   Accessorio: 'accessorio',
 };
 
+const SEASONS: GarmentSeason[] = ['Primavera/Estate', 'Autunno/Inverno', 'Quattro stagioni'];
+const MATERIALS: GarmentMaterial[] = ['Cotone', 'Lino', 'Denim', 'Lana', 'Poliestere', 'Misto', 'Pelle / Camoscio'];
+
+function pickAllowed<T extends string>(value: string, allowed: T[], fallback: T): T {
+  return allowed.find((a) => a.toLowerCase() === value.trim().toLowerCase()) ?? fallback;
+}
+
 export async function analyzeGarment(imageBase64: string): Promise<AiResponse<GarmentAnalysis>> {
   const data = await invokeAi('analyze-garment', { imageBase64 });
   if (data.configured === false) return { configured: false, error: String(data.error ?? '') };
@@ -62,8 +69,8 @@ export async function analyzeGarment(imageBase64: string): Promise<AiResponse<Ga
       name: String(r.nome ?? 'Capo'),
       category: CATEGORY_MAP[String(r.categoria)] ?? 'maglia',
       color: String(r.colore ?? 'neutro'),
-      season: String(r.stagione ?? 'Quattro stagioni'),
-      material: String(r.materiale ?? 'Misto'),
+      season: pickAllowed(String(r.stagione ?? ''), SEASONS, 'Quattro stagioni'),
+      material: pickAllowed(String(r.materiale ?? ''), MATERIALS, 'Misto'),
       avatar_section: String(r.sezione_avatar ?? 'busto'),
     },
   };
