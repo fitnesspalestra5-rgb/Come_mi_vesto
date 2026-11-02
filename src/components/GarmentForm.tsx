@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
 import type { Garment, GarmentMaterial, GarmentSeason } from '@/lib/types';
-import { CATEGORIES, SECTION_BY_CATEGORY } from '@/lib/types';
+import { CATEGORIES, GARMENT_MATERIALS, GARMENT_SEASONS, SECTION_BY_CATEGORY } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
 import { hexForColor, NAMED_COLORS } from '@/lib/colors';
 import { Banner } from '@/components/ui';
@@ -198,6 +198,20 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
             <select className="input" value={category} onChange={(e) => onCategoryChange(e.target.value)}>
               {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Stagione</label>
+              <select className="input" value={season} onChange={(e) => setSeason(e.target.value as GarmentSeason)}>
+                {GARMENT_SEASONS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Materiale</label>
+              <select className="input" value={material} onChange={(e) => setMaterial(e.target.value as GarmentMaterial)}>
+                {GARMENT_MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
           </div>
           <div>
             <label className="label">Colore</label>

@@ -14,6 +14,9 @@ export type Category =
 
 export type GarmentSeason = 'Primavera/Estate' | 'Autunno/Inverno' | 'Quattro stagioni';
 export type GarmentMaterial = 'Cotone' | 'Lino' | 'Denim' | 'Lana' | 'Poliestere' | 'Misto' | 'Pelle / Camoscio';
+export const GARMENT_SEASONS: GarmentSeason[] = ['Primavera/Estate', 'Autunno/Inverno', 'Quattro stagioni'];
+export const GARMENT_MATERIALS: GarmentMaterial[] = ['Cotone', 'Lino', 'Denim', 'Lana', 'Poliestere', 'Misto', 'Pelle / Camoscio'];
+
 export type AvatarSection = 'busto' | 'gambe' | 'scarpe';
 
 export type Occasion =

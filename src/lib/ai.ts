@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Garment, GarmentMaterial, GarmentSeason, Occasion } from '@/lib/types';
+import { GARMENT_MATERIALS, GARMENT_SEASONS } from '@/lib/types';
 
 // Le chiamate AI partono solo su azione esplicita dell'utente, mai all'apertura dell'archivio.
 
@@ -51,8 +52,6 @@ const CATEGORY_MAP: Record<string, string> = {
   Accessorio: 'accessorio',
 };
 
-const SEASONS: GarmentSeason[] = ['Primavera/Estate', 'Autunno/Inverno', 'Quattro stagioni'];
-const MATERIALS: GarmentMaterial[] = ['Cotone', 'Lino', 'Denim', 'Lana', 'Poliestere', 'Misto', 'Pelle / Camoscio'];
 
 function pickAllowed<T extends string>(value: string, allowed: T[], fallback: T): T {
   return allowed.find((a) => a.toLowerCase() === value.trim().toLowerCase()) ?? fallback;
@@ -69,8 +68,8 @@ export async function analyzeGarment(imageBase64: string): Promise<AiResponse<Ga
       name: String(r.nome ?? 'Capo'),
       category: CATEGORY_MAP[String(r.categoria)] ?? 'maglia',
       color: String(r.colore ?? 'neutro'),
-      season: pickAllowed(String(r.stagione ?? ''), SEASONS, 'Quattro stagioni'),
-      material: pickAllowed(String(r.materiale ?? ''), MATERIALS, 'Misto'),
+      season: pickAllowed(String(r.stagione ?? ''), GARMENT_SEASONS, 'Quattro stagioni'),
+      material: pickAllowed(String(r.materiale ?? ''), GARMENT_MATERIALS, 'Misto'),
       avatar_section: String(r.sezione_avatar ?? 'busto'),
     },
   };

@@ -3,7 +3,7 @@
   "functions": {
     "analyze-garment": {
       "hasChanged": false,
-      "hash": "bc8dd29ae08248380696a03ef48d5567bf331e2f12cff699e03ec4a8bf2448bc2041d2117dd06ac5261bc7d79906d3fadfbaee1ea6f978f486702aa30fe3bf6b"
+      "hash": "721e280e15fb029f72a5c0cc5b1845632f594dcbb1a58d1089a0b410af9e29f22041d2117dd06ac5261bc7d79906d3fadfbaee1ea6f978f486702aa30fe3bf6b"
     },
     "generate-avatar": {
       "hasChanged": false,

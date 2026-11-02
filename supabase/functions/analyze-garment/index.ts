@@ -9,7 +9,7 @@ import {
   GEMINI_VISION_MODEL,
   type VisionExample,
 } from "../_shared/gemini.ts";
-import { REFERENCE_CATEGORIES, REFERENCES } from "./references.ts";
+import { REFERENCES } from "./references.ts";
 
 function toBase64(bytes: Uint8Array): string {
   let binary = "";
@@ -17,14 +17,13 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-// Un solo esempio per categoria: abbastanza per guidare il riconoscimento senza inviare tutta la libreria.
+// Tutti gli esempi della libreria privata ai-references (circa 2 MB), letti con la service role.
 async function loadExamples(): Promise<VisionExample[]> {
   const baseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const refs = REFERENCE_CATEGORIES.map((category) => REFERENCES.find((r) => r.category === category)!);
 
   return Promise.all(
-    refs.map(async (ref) => {
+    REFERENCES.map(async (ref) => {
       const res = await fetch(`${baseUrl}/storage/v1/object/ai-references/${ref.file}`, {
         headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey },
       });

@@ -1,5 +1,5 @@
 // Libreria di riferimento per il riconoscimento dei capi: esempi visivi etichettati,
-// separati dal guardaroba personale. Le immagini sono copie ottimizzate in ./references.
+// separati dal guardaroba personale. I file stanno nel bucket privato ai-references.
 
 export interface ReferenceItem {
   id: string;
@@ -7,17 +7,6 @@ export interface ReferenceItem {
   source: string;
   category: string;
 }
-
-export const REFERENCE_CATEGORIES = [
-  "Maglia / T-shirt",
-  "Camicia",
-  "Giacca / Blazer",
-  "Felpa / Maglione",
-  "Pantalone",
-  "Jeans",
-  "Shorts",
-  "Scarpe / Sneakers",
-] as const;
 
 export const REFERENCES: ReferenceItem[] = [
   { id: "ref-01", file: "ref-01.jpg", source: "IMG_2190.jpeg", category: "Scarpe / Sneakers" },
