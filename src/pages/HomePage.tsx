@@ -22,10 +22,10 @@ export function HomePage() {
           src={BG.home}
           alt=""
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover object-top"
-          style={{ objectPosition: 'center top' }}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: 'center 60%' }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-cream-50/70 via-cream-50/10 to-cream-900/40" />
+        <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-cream-900/50 to-transparent" />
         <div className="relative z-10 h-full flex flex-col justify-end px-6 pb-6 pt-[calc(0.5rem+env(safe-area-inset-top))] max-w-2xl mx-auto w-full">
           <p className="text-cream-100 text-sm text-shadow-soft">Bentornatə</p>
           <h1 className="text-3xl font-display font-semibold text-cream-50 text-shadow-soft capitalize">{name}</h1>

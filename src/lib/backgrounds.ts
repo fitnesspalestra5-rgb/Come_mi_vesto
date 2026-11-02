@@ -1,6 +1,7 @@
-// Sfondi locali ritagliati dai tre pannelli di riferimento.
+// Sfondi dell'app, ricavati dalle tre immagini di riferimento.
 export const BG = {
-  welcome: '/assets/images/sfondo_1_benvenuto.jpg',
-  home: '/assets/images/sfondo_2_home.jpg',
-  internal: '/assets/images/sfondo_3_pagine_interne.jpg',
+  home: '/assets/images/IMG_2297.jpeg',
+  guardaroba: '/assets/images/IMG_2295.png',
+  internal: '/assets/images/IMG_2296.png',
+  welcome: '/assets/images/IMG_2296.png',
 };

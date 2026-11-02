@@ -19,8 +19,11 @@ export function AppShell() {
       <div className="max-w-2xl mx-auto min-h-screen relative bg-cream-50/60">
         {route !== 'home' && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-            <img src={BG.internal} alt="" className="w-full h-full object-cover opacity-[0.16]" />
-            <div className="absolute inset-0 bg-cream-50/60" />
+            <img
+              src={route === 'guardaroba' ? BG.guardaroba : BG.internal}
+              alt=""
+              className={`w-full h-full object-cover ${route === 'guardaroba' ? 'opacity-[0.18]' : 'opacity-[0.28]'}`}
+            />
           </div>
         )}
         <div className="relative z-10 flex items-center justify-between px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-1">
