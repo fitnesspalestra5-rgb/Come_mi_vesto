@@ -3,7 +3,7 @@
 // GEMINI_API_KEY lato server (Supabase Edge Functions) e non è mai esposta
 // al frontend. Tutte le funzioni AI del progetto usano questo modulo.
 
-export const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
+export const GEMINI_TEXT_MODEL = "gemini-3.5-flash";
 export const GEMINI_VISION_MODEL = "gemini-3.5-flash";
 export const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 

@@ -30,13 +30,14 @@ Deno.serve(async (req: Request) => {
       .join("\n");
 
     const prompt =
-      "Sei uno stylist personale. Componi un outfit usando SOLO i capi elencati, preferendo le combinazioni reali disponibili. Se manca un pantalone o un jeans, suggerisci il colore coordinato migliore per il capo superiore usando un contrasto bilanciato. " +
+      "Sei uno stylist personale. Componi un outfit usando SOLO i capi elencati, senza inventarne altri e senza citare capi mancanti. " +
+      "Se i capi sono pochi, usa quelli disponibili anche se l'outfit è incompleto. Ogni capo va usato al massimo una volta. " +
       "Occasione: " + (occasion || "tempo libero") + ". Contesto meteo: " + (weather || "non specificato") + ".\n\n" +
       "Capi disponibili:\n" + garmentsText + "\n\n" +
       "Restituisci SOLO un oggetto JSON: " +
       '{"name": nome outfit, "occasion": occasione, "items": [{"garment_id": id, "role": ruolo tra top/bottom/outer/shoes/accessory}], ' +
       '"reason": breve spiegazione in italiano di perché funziona, "tips": consiglio accessorio opzionale}. ' +
-      "Scegli almeno 2-4 capi se disponibili.";
+      "Scegli da 1 a 4 capi, quelli che servono davvero.";
 
     const result = await geminiTextJson(cfg.apiKey!, GEMINI_TEXT_MODEL, prompt, 1024);
     if (!result.ok) {

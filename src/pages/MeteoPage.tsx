@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Cloud, Search, MapPin, CloudRain, Wind, Sun, Thermometer } from 'lucide-react';
-import { PageHeader, EmptyState, Banner } from '@/components/ui';
-import { getWeatherForCity, dressingAdvice, type WeatherData } from '@/lib/weather';
-import { Spinner } from '@/components/ui';
+import { PageHeader, EmptyState, Banner, Spinner } from '@/components/ui';
+import { RainRadar } from '@/components/RainRadar';
+import { getWeatherForCity, fetchWeather, dressingAdvice, type WeatherData } from '@/lib/weather';
 
 export function MeteoPage() {
   const [city, setCity] = useState('');
@@ -30,7 +30,7 @@ export function MeteoPage() {
     }
   };
 
-  const useGeolocation = () => {
+  const locate = useCallback(() => {
     if (!navigator.geolocation) {
       setError('Geolocalizzazione non disponibile su questo dispositivo.');
       return;
@@ -40,7 +40,6 @@ export function MeteoPage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const { fetchWeather } = await import('@/lib/weather');
           const data = await fetchWeather(pos.coords.latitude, pos.coords.longitude, 'La tua posizione');
           if (!data) setError('Non sono riuscito a recuperare il meteo per la tua posizione.');
           else { setWeather(data); setCity(data.city); }
@@ -53,9 +52,14 @@ export function MeteoPage() {
       () => {
         setError('Permesso di localizzazione negato. Inserisci una città manualmente.');
         setLoading(false);
-      }
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
     );
-  };
+  }, []);
+
+  useEffect(() => {
+    locate();
+  }, [locate]);
 
   const tips = weather ? dressingAdvice(weather) : [];
 
@@ -73,8 +77,8 @@ export function MeteoPage() {
             <button type="submit" disabled={loading} className="btn-primary flex-1">
               <Cloud size={16} /> Cerca
             </button>
-            <button type="button" onClick={useGeolocation} disabled={loading} className="btn-secondary">
-              <MapPin size={16} /> Posizione
+            <button type="button" onClick={locate} disabled={loading} className="btn-secondary">
+              <MapPin size={16} /> Mia posizione
             </button>
           </div>
         </form>
@@ -119,6 +123,8 @@ export function MeteoPage() {
         {!weather && !loading && !error && (
           <EmptyState icon={<Cloud size={28} />} title="Cerca una città" hint="Inserisci il nome di una città o usa la tua posizione per ricevere consigli su come vestirti." />
         )}
+
+        <RainRadar />
       </div>
     </div>
   );
