@@ -26,17 +26,18 @@ Deno.serve(async (req: Request) => {
     }
 
     const garmentsText = garments
-      .map((g: { id: string; name: string; category: string; color: string; avatar_section?: string | null }) => `- id:${g.id} | ${g.name} (${g.category}, ${g.color}, sezione: ${g.avatar_section ?? 'busto'})`)
+      .map((g: { id: string; name: string; category: string; color: string; avatar_section?: string | null; season?: string | null; material?: string | null }) => `- id:${g.id} | ${g.name} (${g.category}, colore ${g.color}, stagione ${g.season ?? 'non indicata'}, materiale ${g.material ?? 'non indicato'}, sezione: ${g.avatar_section ?? 'busto'})`)
       .join("\n");
 
     const prompt =
-      "Sei uno stylist personale. Componi un outfit usando SOLO i capi elencati, senza inventarne altri e senza citare capi mancanti. " +
-      "Se i capi sono pochi, usa quelli disponibili anche se l'outfit è incompleto. Ogni capo va usato al massimo una volta. " +
+      "Sei uno stylist personale esperto. Componi un outfit usando SOLO i capi elencati, senza inventarne altri e senza citare capi mancanti. " +
+      "Valuta ogni abbinamento per: occasione, coordinamento dei colori (evita accostamenti che stonano), tipologia dei capi (sopra, sotto, eventuale esterno, scarpe, accessori), stagione e materiale coerenti, compatibilità tra gli indumenti. " +
+      "Ogni capo va usato al massimo una volta. Se i capi sono pochi, usa quelli disponibili anche se l'outfit è incompleto. " +
       "Occasione: " + (occasion || "tempo libero") + ". Contesto meteo: " + (weather || "non specificato") + ".\n\n" +
       "Capi disponibili:\n" + garmentsText + "\n\n" +
       "Restituisci SOLO un oggetto JSON: " +
       '{"name": nome outfit, "occasion": occasione, "items": [{"garment_id": id, "role": ruolo tra top/bottom/outer/shoes/accessory}], ' +
-      '"reason": breve spiegazione in italiano di perché funziona, "tips": consiglio accessorio opzionale}. ' +
+      '"reason": spiegazione in italiano in 2-4 frasi di come i capi si abbinano per colore, tipologia, stagione e materiale, "tips": consiglio opzionale che usa solo i capi elencati}. ' +
       "Scegli da 1 a 4 capi, quelli che servono davvero.";
 
     const result = await geminiTextJson(cfg.apiKey!, GEMINI_TEXT_MODEL, prompt, 1024);

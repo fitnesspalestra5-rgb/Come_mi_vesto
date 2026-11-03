@@ -43,8 +43,18 @@ export function hexForColor(name: string): string {
 }
 
 export function colorNameFromHex(hex: string): string {
-  const found = NAMED_COLORS.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
-  return found ? found.name : 'neutro';
+  const target = hexToRgb(hex);
+  let best = NAMED_COLORS[0];
+  let bestDistance = Infinity;
+  for (const c of NAMED_COLORS) {
+    const rgb = hexToRgb(c.hex);
+    const distance = (rgb.r - target.r) ** 2 + (rgb.g - target.g) ** 2 + (rgb.b - target.b) ** 2;
+    if (distance < bestDistance) {
+      best = c;
+      bestDistance = distance;
+    }
+  }
+  return best.name;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {

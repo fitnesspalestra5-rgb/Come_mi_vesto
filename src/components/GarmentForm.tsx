@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
 import type { Garment, GarmentMaterial, GarmentSeason } from '@/lib/types';
-import { CATEGORIES, GARMENT_MATERIALS, GARMENT_SEASONS, SECTION_BY_CATEGORY } from '@/lib/types';
+import { CATEGORIES, GARMENT_MATERIALS, GARMENT_SEASONS } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
-import { hexForColor, NAMED_COLORS } from '@/lib/colors';
+import { colorNameFromHex, hexForColor, NAMED_COLORS } from '@/lib/colors';
 import { Banner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { analyzeGarment } from '@/lib/ai';
-import { compressImage, dominantColorHex, fileToBase64, uploadGarmentImage } from '@/lib/images';
+import { compressImage, dominantColorHex, uploadGarmentImage } from '@/lib/images';
 
 interface Props {
   editing?: Garment | null;
@@ -20,18 +19,17 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
 
   const [preview, setPreview] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<string>('maglia');
+  const [category, setCategory] = useState('');
   const [color, setColor] = useState('neutro');
   const [colorHex, setColorHex] = useState('#c8b89a');
   const [notes, setNotes] = useState('');
-  const [season, setSeason] = useState<GarmentSeason>('Quattro stagioni');
-  const [material, setMaterial] = useState<GarmentMaterial>('Misto');
-  const [avatarSection, setAvatarSection] = useState<string>('busto');
+  const [season, setSeason] = useState<GarmentSeason | ''>('');
+  const [material, setMaterial] = useState<GarmentMaterial | ''>('');
+  const [avatarSection, setAvatarSection] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pickedFile, setPickedFile] = useState<File | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [aiNote, setAiNote] = useState<string | null>(null);
   const analysisRef = useRef(0);
   const { user } = useAuth();
 
@@ -42,9 +40,9 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
       setColor(editing.color);
       setColorHex(editing.color_hex);
       setNotes(editing.notes ?? '');
-      setSeason(editing.season ?? 'Quattro stagioni');
-      setMaterial(editing.material ?? 'Misto');
-      setAvatarSection(editing.avatar_section ?? 'busto');
+      setSeason(editing.season ?? '');
+      setMaterial(editing.material ?? '');
+      setAvatarSection(editing.avatar_section ?? '');
       setPreview(editing.image_path);
     }
   }, [editing]);
@@ -68,45 +66,32 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
     setPreview(URL.createObjectURL(file));
     setPickedFile(file);
     setError(null);
-    void analyzePhoto(file);
+    void detectColor(file);
   };
 
-  const analyzePhoto = async (file: File) => {
+  const detectColor = async (file: File) => {
     const requestId = ++analysisRef.current;
     const isCurrent = () => requestId === analysisRef.current;
     setAnalyzing(true);
-    setAiNote(null);
     try {
-      const blob = await compressImage(file);
-      const [res, hex] = await Promise.all([analyzeGarment(await fileToBase64(blob)), dominantColorHex(blob)]);
-      if (!isCurrent()) return;
-      if (!res.result) {
-        setAiNote(res.error || 'Riconoscimento automatico non disponibile. Compila i campi a mano.');
-        return;
-      }
-      const r = res.result;
-      setName((current) => (current.trim() ? current : r.name));
-      setCategory(r.category);
-      setAvatarSection(SECTION_BY_CATEGORY[r.category] ?? 'busto');
-      setColor(r.color.toLowerCase());
-      setColorHex(hex ?? hexForColor(r.color));
-      setSeason(r.season);
-      setMaterial(r.material);
-    } catch (e) {
-      if (isCurrent()) setAiNote((e as Error).message);
+      const hex = await dominantColorHex(await compressImage(file));
+      if (!isCurrent() || !hex) return;
+      setColorHex(hex);
+      setColor(colorNameFromHex(hex));
+    } catch {
+      if (isCurrent()) setError('Non sono riuscito a leggere il colore dalla foto. Scegli il colore a mano.');
     } finally {
       if (isCurrent()) setAnalyzing(false);
     }
   };
 
-  const onCategoryChange = (value: string) => {
-    setCategory(value);
-    setAvatarSection(SECTION_BY_CATEGORY[value] ?? 'busto');
-  };
-
   const save = async () => {
     if (!name.trim()) {
       setError('Dai un nome al capo.');
+      return;
+    }
+    if (!category || !season || !material || !avatarSection) {
+      setError('Scegli categoria, stagione, materiale e sezione avatar.');
       return;
     }
     setBusy(true);
@@ -180,12 +165,11 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
           >
             <Camera size={32} className="text-terracotta-500" />
             <span className="text-sm font-medium">Scatta o scegli una foto</span>
-            <span className="text-xs text-cream-500">L'AI riconosce tipo, colore, stagione e materiale</span>
+            <span className="text-xs text-cream-500">Il colore viene letto dalla foto, il resto lo scegli tu</span>
           </button>
         )}
 
-        {analyzing && <div className="mb-3"><Banner tone="info">Riconosco il capo dalla foto…</Banner></div>}
-        {aiNote && <div className="mb-3"><Banner tone="warn">{aiNote}</Banner></div>}
+        {analyzing && <div className="mb-3"><Banner tone="info">Leggo il colore dalla foto…</Banner></div>}
         {error && <div className="mb-3"><Banner tone="warn">{error}</Banner></div>}
 
         <div className="space-y-3">
@@ -195,7 +179,8 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
           </div>
           <div>
             <label className="label">Categoria</label>
-            <select className="input" value={category} onChange={(e) => onCategoryChange(e.target.value)}>
+            <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
+              <option value="" disabled>Seleziona…</option>
               {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
@@ -203,12 +188,14 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
             <div>
               <label className="label">Stagione</label>
               <select className="input" value={season} onChange={(e) => setSeason(e.target.value as GarmentSeason)}>
+                <option value="" disabled>Seleziona…</option>
                 {GARMENT_SEASONS.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
               <label className="label">Materiale</label>
               <select className="input" value={material} onChange={(e) => setMaterial(e.target.value as GarmentMaterial)}>
+                <option value="" disabled>Seleziona…</option>
                 {GARMENT_MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
@@ -232,6 +219,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
           <div>
             <label className="label">Sezione avatar</label>
             <select className="input" value={avatarSection} onChange={(e) => setAvatarSection(e.target.value)}>
+              <option value="" disabled>Seleziona…</option>
               <option value="busto">Busto</option>
               <option value="gambe">Gambe</option>
               <option value="scarpe">Scarpe</option>

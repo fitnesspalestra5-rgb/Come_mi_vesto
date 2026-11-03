@@ -1,17 +1,7 @@
 import { supabase } from '@/lib/supabase';
-import type { Garment, GarmentMaterial, GarmentSeason, Occasion } from '@/lib/types';
-import { GARMENT_MATERIALS, GARMENT_SEASONS } from '@/lib/types';
+import type { Garment, Occasion } from '@/lib/types';
 
 // Le chiamate AI partono solo su azione esplicita dell'utente, mai all'apertura dell'archivio.
-
-export interface GarmentAnalysis {
-  name: string;
-  category: string;
-  color: string;
-  season: GarmentSeason;
-  material: GarmentMaterial;
-  avatar_section: string;
-}
 
 export interface AiResponse<T> {
   configured: boolean;
@@ -40,41 +30,6 @@ async function invokeAi(name: string, body: Record<string, unknown>): Promise<Re
   return data as Record<string, unknown>;
 }
 
-const CATEGORY_MAP: Record<string, string> = {
-  'Maglia / T-shirt': 'maglia',
-  Camicia: 'camicia',
-  'Giacca / Blazer': 'giacca',
-  'Felpa / Maglione': 'felpa',
-  Pantalone: 'pantalone',
-  Jeans: 'jeans',
-  Shorts: 'pantalone',
-  'Scarpe / Sneakers': 'scarpe',
-  Accessorio: 'accessorio',
-};
-
-
-function pickAllowed<T extends string>(value: string, allowed: T[], fallback: T): T {
-  return allowed.find((a) => a.toLowerCase() === value.trim().toLowerCase()) ?? fallback;
-}
-
-export async function analyzeGarment(imageBase64: string): Promise<AiResponse<GarmentAnalysis>> {
-  const data = await invokeAi('analyze-garment', { imageBase64 });
-  if (data.configured === false) return { configured: false, error: String(data.error ?? '') };
-  if (data.error) return { configured: true, error: String(data.error) };
-  const r = (data.result ?? {}) as Record<string, unknown>;
-  return {
-    configured: true,
-    result: {
-      name: String(r.nome ?? 'Capo'),
-      category: CATEGORY_MAP[String(r.categoria)] ?? 'maglia',
-      color: String(r.colore ?? 'neutro'),
-      season: pickAllowed(String(r.stagione ?? ''), GARMENT_SEASONS, 'Quattro stagioni'),
-      material: pickAllowed(String(r.materiale ?? ''), GARMENT_MATERIALS, 'Misto'),
-      avatar_section: String(r.sezione_avatar ?? 'busto'),
-    },
-  };
-}
-
 export interface OutfitProposal {
   name: string;
   occasion: string;
@@ -88,7 +43,15 @@ export async function generateOutfit(
   occasion: Occasion | string,
   weather?: string
 ): Promise<AiResponse<OutfitProposal>> {
-  const payload = garments.map((g) => ({ id: g.id, name: g.name, category: g.category, color: g.color, avatar_section: g.avatar_section }));
+  const payload = garments.map((g) => ({
+    id: g.id,
+    name: g.name,
+    category: g.category,
+    color: g.color,
+    avatar_section: g.avatar_section,
+    season: g.season,
+    material: g.material,
+  }));
   const data = await invokeAi('generate-outfit', { garments: payload, occasion, weather });
   if (data.configured === false) return { configured: false, error: String(data.error ?? '') };
   if (data.error) return { configured: true, error: String(data.error) };
