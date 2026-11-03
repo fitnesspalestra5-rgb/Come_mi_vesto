@@ -29,6 +29,22 @@ export async function geocodeCity(city: string): Promise<{ lat: number; lon: num
   }
 }
 
+export async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=it` +
+    `&lat=${lat}&lon=${lon}`;
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const a = data?.address ?? {};
+    const name = a.city ?? a.town ?? a.village ?? a.municipality ?? a.county ?? null;
+    return typeof name === 'string' && name.trim() ? name.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchWeather(lat: number, lon: number, name: string): Promise<WeatherData | null> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +

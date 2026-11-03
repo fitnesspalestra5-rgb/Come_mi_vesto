@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Cloud, Search, MapPin, CloudRain, Wind, Sun, Thermometer } from 'lucide-react';
 import { PageHeader, EmptyState, Banner, Spinner } from '@/components/ui';
 import { RainRadar } from '@/components/RainRadar';
-import { getWeatherForCity, fetchWeather, dressingAdvice, type WeatherData } from '@/lib/weather';
+import { getWeatherForCity, fetchWeather, reverseGeocode, dressingAdvice, type WeatherData } from '@/lib/weather';
 
 export function MeteoPage() {
   const [city, setCity] = useState('');
@@ -40,7 +40,9 @@ export function MeteoPage() {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         try {
-          const data = await fetchWeather(pos.coords.latitude, pos.coords.longitude, 'La tua posizione');
+          const { latitude, longitude } = pos.coords;
+          const place = (await reverseGeocode(latitude, longitude)) ?? 'La tua posizione';
+          const data = await fetchWeather(latitude, longitude, place);
           if (!data) setError('Non sono riuscito a recuperare il meteo per la tua posizione.');
           else { setWeather(data); setCity(data.city); }
         } catch {

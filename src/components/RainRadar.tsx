@@ -20,15 +20,16 @@ export function RainRadar() {
         </a>
       </div>
       <p className="text-xs text-cream-600 mb-3">Mappa ufficiale Radar-DPC del Dipartimento della Protezione Civile, aggiornata ogni 5 minuti.</p>
-      <div className="rounded-xl overflow-hidden border border-cream-200 bg-cream-100 aspect-[4/3]">
-        <iframe
-          src={RADAR_URL}
-          title="Radar piogge Protezione Civile"
-          className="w-full h-full"
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
-      </div>
+      <a
+        href={RADAR_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-xl border border-cream-200 bg-cream-100 p-6 text-center transition hover:bg-cream-200"
+      >
+        <Radar size={28} className="text-terracotta-600" />
+        <span className="text-sm font-medium text-cream-900">Apri il radar ufficiale</span>
+        <span className="text-xs text-cream-600">Si apre nel sito della Protezione Civile</span>
+      </a>
     </div>
   );
 }
