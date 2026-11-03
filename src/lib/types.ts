@@ -29,6 +29,11 @@ export type Occasion =
 
 export type OutfitRole = 'top' | 'bottom' | 'outer' | 'shoes' | 'accessory';
 
+export interface GarmentColor {
+  name: string;
+  hex: string;
+}
+
 export interface Garment {
   id: string;
   user_id: string;
@@ -36,6 +41,7 @@ export interface Garment {
   category: Category | string;
   color: string;
   color_hex: string;
+  colors: GarmentColor[] | null;
   image_path: string | null;
   notes: string | null;
   season: GarmentSeason | null;

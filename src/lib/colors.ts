@@ -37,11 +37,6 @@ export const NAMED_COLORS: NamedColor[] = [
   { name: 'rust', hex: '#9c5a3c' },
 ];
 
-export function hexForColor(name: string): string {
-  const found = NAMED_COLORS.find((c) => c.name.toLowerCase() === name.toLowerCase());
-  return found ? found.hex : '#c8b89a';
-}
-
 export function colorNameFromHex(hex: string): string {
   const target = hexToRgb(hex);
   let best = NAMED_COLORS[0];

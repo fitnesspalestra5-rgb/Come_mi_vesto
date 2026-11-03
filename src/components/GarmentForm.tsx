@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
 import { Camera, X, Check, RefreshCw } from 'lucide-react';
-import type { Garment, GarmentMaterial, GarmentSeason } from '@/lib/types';
+import type { Garment, GarmentColor, GarmentMaterial, GarmentSeason } from '@/lib/types';
 import { CATEGORIES, GARMENT_MATERIALS, GARMENT_SEASONS } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
-import { colorNameFromHex, hexForColor, NAMED_COLORS } from '@/lib/colors';
 import { Banner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
-import { compressImage, dominantColorHex, uploadGarmentImage } from '@/lib/images';
+import { compressImage, extractGarmentColors, uploadGarmentImage } from '@/lib/images';
 
 interface Props {
   editing?: Garment | null;
@@ -14,14 +13,17 @@ interface Props {
   onSaved: () => void;
 }
 
+function initialPalette(garment: Garment): GarmentColor[] {
+  if (garment.colors?.length) return garment.colors;
+  return garment.color ? [{ name: garment.color, hex: garment.color_hex }] : [];
+}
+
 export function GarmentForm({ editing, onClose, onSaved }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [preview, setPreview] = useState<string | null>(null);
-  const [name, setName] = useState('');
   const [category, setCategory] = useState('');
-  const [color, setColor] = useState('neutro');
-  const [colorHex, setColorHex] = useState('#c8b89a');
+  const [palette, setPalette] = useState<GarmentColor[]>([]);
   const [notes, setNotes] = useState('');
   const [season, setSeason] = useState<GarmentSeason | ''>('');
   const [material, setMaterial] = useState<GarmentMaterial | ''>('');
@@ -35,10 +37,8 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
 
   useEffect(() => {
     if (editing) {
-      setName(editing.name);
       setCategory(editing.category);
-      setColor(editing.color);
-      setColorHex(editing.color_hex);
+      setPalette(initialPalette(editing));
       setNotes(editing.notes ?? '');
       setSeason(editing.season ?? '');
       setMaterial(editing.material ?? '');
@@ -66,32 +66,39 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
     setPreview(URL.createObjectURL(file));
     setPickedFile(file);
     setError(null);
-    void detectColor(file);
+    void detectColors(file);
   };
 
-  const detectColor = async (file: File) => {
+  const detectColors = async (file: File) => {
     const requestId = ++analysisRef.current;
     const isCurrent = () => requestId === analysisRef.current;
     setAnalyzing(true);
     try {
-      const hex = await dominantColorHex(await compressImage(file));
-      if (!isCurrent() || !hex) return;
-      setColorHex(hex);
-      setColor(colorNameFromHex(hex));
+      const colors = await extractGarmentColors(await compressImage(file));
+      if (!isCurrent()) return;
+      if (colors.length === 0) {
+        setPalette([]);
+        setError('Non riesco a leggere i colori da questa foto. Prova con una foto più chiara.');
+        return;
+      }
+      setPalette(colors);
     } catch {
-      if (isCurrent()) setError('Non sono riuscito a leggere il colore dalla foto. Scegli il colore a mano.');
+      if (isCurrent()) {
+        setPalette([]);
+        setError('Non riesco a leggere i colori da questa foto. Prova con una foto più chiara.');
+      }
     } finally {
       if (isCurrent()) setAnalyzing(false);
     }
   };
 
   const save = async () => {
-    if (!name.trim()) {
-      setError('Dai un nome al capo.');
-      return;
-    }
     if (!category || !season || !material || !avatarSection) {
       setError('Scegli categoria, stagione, materiale e sezione avatar.');
+      return;
+    }
+    if (palette.length === 0) {
+      setError('Aggiungi una foto del capo: da lì vengono rilevati i colori.');
       return;
     }
     setBusy(true);
@@ -101,11 +108,13 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
       const imagePath = pickedFile
         ? await uploadGarmentImage(await compressImage(pickedFile), user.id)
         : (editing?.image_path ?? null);
+      const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label ?? category;
       const payload = {
-        name: name.trim(),
+        name: editing?.name ?? `${categoryLabel} ${palette[0].name}`,
         category,
-        color,
-        color_hex: colorHex,
+        color: palette.map((c) => c.name).join(', '),
+        color_hex: palette[0].hex,
+        colors: palette,
         notes: notes.trim() || null,
         season,
         material,
@@ -165,17 +174,28 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
           >
             <Camera size={32} className="text-terracotta-500" />
             <span className="text-sm font-medium">Scatta o scegli una foto</span>
-            <span className="text-xs text-cream-500">Il colore viene letto dalla foto, il resto lo scegli tu</span>
+            <span className="text-xs text-cream-500">I colori vengono riconosciuti automaticamente dalla foto</span>
           </button>
         )}
 
-        {analyzing && <div className="mb-3"><Banner tone="info">Leggo il colore dalla foto…</Banner></div>}
+        {analyzing && <div className="mb-3"><Banner tone="info">Riconosco i colori dalla foto…</Banner></div>}
         {error && <div className="mb-3"><Banner tone="warn">{error}</Banner></div>}
 
         <div className="space-y-3">
           <div>
-            <label className="label">Nome</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="es. Camicia lino beige" />
+            <label className="label">Colori</label>
+            {palette.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {palette.map((c) => (
+                  <span key={c.hex} className="inline-flex items-center gap-2 rounded-full border border-cream-300 bg-cream-50 py-1 pl-1 pr-3 text-sm text-cream-900">
+                    <span className="h-6 w-6 rounded-full border border-cream-300" style={{ backgroundColor: c.hex }} />
+                    {c.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-cream-500">Nessun colore rilevato: scegli una foto del capo.</p>
+            )}
           </div>
           <div>
             <label className="label">Categoria</label>
@@ -201,22 +221,6 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
             </div>
           </div>
           <div>
-            <label className="label">Colore</label>
-            <div className="flex min-w-0 gap-2 items-center">
-              <input type="color" value={colorHex} onChange={(e) => setColorHex(e.target.value)} className="w-12 h-11 rounded-lg border border-cream-300 bg-cream-50 cursor-pointer" />
-              <input
-                className="input min-w-0 flex-1"
-                value={color}
-                onChange={(e) => { setColor(e.target.value); setColorHex(hexForColor(e.target.value)); }}
-                list="color-list"
-                placeholder="es. beige"
-              />
-              <datalist id="color-list">
-                {NAMED_COLORS.map((c) => <option key={c.name} value={c.name} />)}
-              </datalist>
-            </div>
-          </div>
-          <div>
             <label className="label">Sezione avatar</label>
             <select className="input" value={avatarSection} onChange={(e) => setAvatarSection(e.target.value)}>
               <option value="" disabled>Seleziona…</option>
@@ -233,7 +237,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
 
         <div className="flex gap-2 mt-5">
           <button onClick={onClose} className="btn-ghost flex-1">Annulla</button>
-          <button onClick={save} disabled={busy || analyzing || !name} className="btn-primary flex-1">
+          <button onClick={save} disabled={busy || analyzing} className="btn-primary flex-1">
             {busy ? 'Salvo…' : <>Salva <Check size={16} /></>}
           </button>
         </div>
