@@ -6,6 +6,7 @@ import { insertGarment, updateGarment } from '@/lib/garments';
 import { Banner } from '@/components/ui';
 import { useAuth } from '@/lib/auth';
 import { compressImage, extractGarmentColors, uploadGarmentImage } from '@/lib/images';
+import { GarmentColorPicker } from '@/components/GarmentColorPicker';
 
 interface Props {
   editing?: Garment | null;
@@ -98,7 +99,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
       return;
     }
     if (palette.length === 0) {
-      setError('Aggiungi una foto del capo: da lì vengono rilevati i colori.');
+      setError('Scegli almeno un colore del capo.');
       return;
     }
     setBusy(true);
@@ -184,18 +185,7 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
         <div className="space-y-3">
           <div>
             <label className="label">Colori</label>
-            {palette.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {palette.map((c) => (
-                  <span key={c.hex} className="inline-flex items-center gap-2 rounded-full border border-cream-300 bg-cream-50 py-1 pl-1 pr-3 text-sm text-cream-900">
-                    <span className="h-6 w-6 rounded-full border border-cream-300" style={{ backgroundColor: c.hex }} />
-                    {c.name}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-cream-500">Nessun colore rilevato: scegli una foto del capo.</p>
-            )}
+            <GarmentColorPicker palette={palette} onChange={setPalette} />
           </div>
           <div>
             <label className="label">Categoria</label>

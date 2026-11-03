@@ -48,6 +48,7 @@ export async function generateOutfit(
     name: g.name,
     category: g.category,
     color: g.color,
+    colors: g.colors ?? [],
     avatar_section: g.avatar_section,
     season: g.season,
     material: g.material,

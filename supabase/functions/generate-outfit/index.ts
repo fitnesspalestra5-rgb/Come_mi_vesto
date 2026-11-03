@@ -26,7 +26,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const garmentsText = garments
-      .map((g: { id: string; name: string; category: string; color: string; avatar_section?: string | null; season?: string | null; material?: string | null }) => `- id:${g.id} | ${g.name} (${g.category}, colore ${g.color}, stagione ${g.season ?? 'non indicata'}, materiale ${g.material ?? 'non indicato'}, sezione: ${g.avatar_section ?? 'busto'})`)
+      .map((g: { id: string; name: string; category: string; color: string; colors?: { name: string }[]; avatar_section?: string | null; season?: string | null; material?: string | null }) => {
+        const colorNames = g.colors?.length ? g.colors.map((c) => c.name).join(', ') : g.color;
+        return `- id:${g.id} | ${g.name} (${g.category}, colori ${colorNames}, stagione ${g.season ?? 'non indicata'}, materiale ${g.material ?? 'non indicato'}, sezione: ${g.avatar_section ?? 'busto'})`;
+      })
       .join("\n");
 
     const prompt =
