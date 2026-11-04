@@ -12,6 +12,10 @@
     "generate-outfit": {
       "hasChanged": false,
       "hash": "2402d340dad7336a88acd5e3a3c0346a5807551aeec414f07d46615e137ccde62041d2117dd06ac5261bc7d79906d3fadfbaee1ea6f978f486702aa30fe3bf6b"
+    },
+    "analyze-color": {
+      "hasChanged": false,
+      "hash": "4947e5453e21babc82442685cbdd72191c2369a8769a02a9205b5ddaaaadc6c72041d2117dd06ac5261bc7d79906d3fadfbaee1ea6f978f486702aa30fe3bf6b"
     }
   }
 }

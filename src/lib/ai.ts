@@ -1,5 +1,16 @@
 import { supabase } from '@/lib/supabase';
+import { fileToBase64 } from '@/lib/images';
 import type { Garment, Occasion } from '@/lib/types';
+
+export interface ColorMatch {
+  name: string;
+  hex: string;
+}
+
+export interface ColorAnalysisResult {
+  detected: ColorMatch;
+  matches: ColorMatch[];
+}
 
 // Le chiamate AI partono solo su azione esplicita dell'utente, mai all'apertura dell'archivio.
 
@@ -81,4 +92,23 @@ export async function generateAvatar(
   if (data.error) return { configured: true, error: String(data.error) };
   const r = (data.result ?? {}) as Record<string, unknown>;
   return { configured: true, result: { imageBase64: String(r.imageBase64 ?? '') } };
+}
+
+export async function analyzeColorPhoto(
+  file: File | Blob,
+): Promise<AiResponse<ColorAnalysisResult>> {
+  const base64 = await fileToBase64(file);
+  const data = await invokeAi('analyze-color', { imageBase64: base64, mimeType: 'image/jpeg' });
+  if (data.configured === false) return { configured: false, error: String(data.error ?? '') };
+  if (data.error) return { configured: true, error: String(data.error) };
+  const r = (data.result ?? {}) as Record<string, unknown>;
+  const detected = (r.detected ?? {}) as Record<string, unknown>;
+  const matches = Array.isArray(r.matches) ? (r.matches as Record<string, unknown>[]) : [];
+  return {
+    configured: true,
+    result: {
+      detected: { name: String(detected.name ?? ''), hex: String(detected.hex ?? '') },
+      matches: matches.map((m) => ({ name: String(m.name ?? ''), hex: String(m.hex ?? '') })),
+    },
+  };
 }
