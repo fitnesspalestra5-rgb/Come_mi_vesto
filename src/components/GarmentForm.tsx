@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from 'react';
-import { Camera, X, Check, RefreshCw } from 'lucide-react';
+import { Camera, X, Check, Image as ImageIcon, FolderOpen } from 'lucide-react';
 import type { Garment, GarmentColor, GarmentMaterial, GarmentSeason } from '@/lib/types';
 import { CATEGORIES, GARMENT_MATERIALS, GARMENT_SEASONS } from '@/lib/types';
 import { insertGarment, updateGarment } from '@/lib/garments';
@@ -20,7 +20,10 @@ function initialPalette(garment: Garment): GarmentColor[] {
 }
 
 export function GarmentForm({ editing, onClose, onSaved }: Props) {
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRefs = [cameraInputRef, galleryInputRef, fileInputRef];
 
   const [preview, setPreview] = useState<string | null>(null);
   const [category, setCategory] = useState('');
@@ -153,30 +156,60 @@ export function GarmentForm({ editing, onClose, onSaved }: Props) {
         </div>
 
         <input
-          ref={fileInputRef}
+          ref={cameraInputRef}
           type="file"
           accept="image/*"
           capture="environment"
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.target.value = ''; }}
+        />
+        <input
+          ref={galleryInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.target.value = ''; }}
+        />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) onPick(f); e.target.value = ''; }}
         />
 
         {preview ? (
           <div className="relative aspect-[4/3] sm:aspect-square rounded-xl overflow-hidden bg-cream-100 mb-4">
             <img src={preview} alt="" draggable={false} decoding="async" className="w-full h-full object-cover" />
-            <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-2 right-2 btn-secondary text-xs py-2">
-              <RefreshCw size={14} /> Cambia foto
-            </button>
+            <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1.5 p-2 bg-gradient-to-t from-cream-900/70 to-transparent">
+              <button onClick={() => cameraInputRef.current?.click()} className="btn-secondary text-xs py-1.5 px-3 bg-cream-50/95">
+                <Camera size={13} /> Scatta
+              </button>
+              <button onClick={() => galleryInputRef.current?.click()} className="btn-secondary text-xs py-1.5 px-3 bg-cream-50/95">
+                <ImageIcon size={13} /> Galleria
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="btn-secondary text-xs py-1.5 px-3 bg-cream-50/95">
+                <FolderOpen size={13} /> File
+              </button>
+            </div>
           </div>
         ) : (
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full aspect-[4/3] sm:aspect-square rounded-xl border-2 border-dashed border-cream-300 bg-cream-50 flex flex-col items-center justify-center gap-2 text-cream-600 hover:bg-cream-100 transition mb-4"
-          >
+          <div className="rounded-xl border-2 border-dashed border-cream-300 bg-cream-50 p-4 mb-4 flex flex-col items-center gap-3">
             <Camera size={32} className="text-terracotta-500" />
-            <span className="text-sm font-medium">Scatta o scegli una foto</span>
-            <span className="text-xs text-cream-500">I colori vengono riconosciuti automaticamente dalla foto</span>
-          </button>
+            <span className="text-sm font-medium text-cream-700">Aggiungi una foto del capo</span>
+            <span className="text-xs text-cream-500 text-center">I colori vengono riconosciuti automaticamente dalla foto</span>
+            <div className="flex gap-2 w-full mt-1">
+              <button onClick={() => cameraInputRef.current?.click()} className="btn-primary flex-1 text-xs">
+                <Camera size={15} /> Scatta foto
+              </button>
+              <button onClick={() => galleryInputRef.current?.click()} className="btn-secondary flex-1 text-xs">
+                <ImageIcon size={15} /> Libreria
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="btn-secondary flex-1 text-xs">
+                <FolderOpen size={15} /> File
+              </button>
+            </div>
+          </div>
         )}
 
         {analyzing && <div className="mb-3"><Banner tone="info">Riconosco i colori dalla foto…</Banner></div>}
